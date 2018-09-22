@@ -1,4 +1,12 @@
 # Roughenough 
+This is a fork of RoughEnough for testing an Evil roughtime server. This fork will let you specify how many seconds before/after the server host's actual time.
+
+Specify in the YAML config file as
+```yaml
+secondsoffset: 666
+```
+
+
 
 [![Apache License 2](https://img.shields.io/badge/license-ASF2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
 [![Build Status](https://travis-ci.org/int08h/roughenough.svg?branch=master)](https://travis-ci.org/int08h/roughenough)
@@ -90,6 +98,7 @@ interface: 127.0.0.1
 port: 8686
 seed: f61075c988feb9cb700a4a6a3291bfbc9cab11b9c9eca8c802468eb38a43d7d3
 batch_size: 64
+secondsoffset: 666
 ```
 
 Where:
@@ -102,7 +111,7 @@ Where:
 * **`batch_size`** - The number of requests to process in one batch. All nonces
                    in a batch are used to build a Merkle tree, the root of which
                    is signed.
-
+* **`secondsoffset`** - The number of seconds off the hosts actual time to respond with
 
 ### Stopping the Server
 

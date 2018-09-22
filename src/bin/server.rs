@@ -35,6 +35,7 @@
 //!   * **batch_size** - The number of requests to process in one batch. All nonces
 //!                      in a batch are used to build a Merkle tree, the root of which
 //!                      is signed.
+//!   * **secondsoffset** - Number of seconds offset from hosts real time
 //!
 //! # Running the Server
 //!
@@ -143,7 +144,7 @@ struct SRep {
     signature: Vec<u8>,
 }
 
-fn make_srep(ephemeral_key: &mut Signer, root: &[u8]) -> SRep {
+fn make_srep(ephemeral_key: &mut Signer, root: &[u8], secondsoffset: u64) -> SRep {
     let mut radi = [0; 4];
     let mut midp = [0; 8];
 
@@ -155,7 +156,7 @@ fn make_srep(ephemeral_key: &mut Signer, root: &[u8]) -> SRep {
     // current epoch time in microseconds
     let now = {
         let tv = time::get_time();
-        let secs = (tv.sec as u64) * 1_000_000;
+        let secs = ((tv.sec as u64) + secondsoffset) * 1_000_000;
         let nsecs = (tv.nsec as u64) / 1_000;
 
         secs + nsecs
@@ -224,7 +225,7 @@ fn nonce_from_request(buf: &[u8], num_bytes: usize) -> Result<&[u8], Error> {
     }
 }
 
-fn load_config(config_file: &str) -> (SocketAddr, Vec<u8>, u8) {
+fn load_config(config_file: &str) -> (SocketAddr, Vec<u8>, u8, u64) {
     let mut infile = File::open(config_file).expect("failed to open config file");
 
     let mut contents = String::new();
@@ -242,6 +243,7 @@ fn load_config(config_file: &str) -> (SocketAddr, Vec<u8>, u8) {
     let mut iface: String = "unknown".to_string();
     let mut seed: String = "".to_string();
     let mut batch_size: u8 = 1;
+    let mut secondsoffset: u64 = 0;
 
     for (key, value) in cfg[0].as_hash().unwrap() {
         match key.as_str().unwrap() {
@@ -249,6 +251,7 @@ fn load_config(config_file: &str) -> (SocketAddr, Vec<u8>, u8) {
             "interface" => iface = value.as_str().unwrap().to_string(),
             "seed" => seed = value.as_str().unwrap().to_string(),
             "batch_size" => batch_size = value.as_i64().unwrap() as u8,
+            "secondsoffset" => secondsoffset = value.as_i64().unwrap() as u64,
             _ => warn!("ignoring unknown config key '{}'", key.as_str().unwrap()),
         }
     }
@@ -260,7 +263,7 @@ fn load_config(config_file: &str) -> (SocketAddr, Vec<u8>, u8) {
     let binseed =
         hex::decode(seed).expect("seed value invalid; 'seed' should be 32 byte hex value");
 
-    (sock_addr, binseed, batch_size)
+    (sock_addr, binseed, batch_size, secondsoffset)
 }
 
 fn polling_loop(
@@ -269,6 +272,7 @@ fn polling_loop(
     cert_bytes: &[u8],
     batch_size: u8,
     response_counter: Arc<AtomicUsize>,
+    secondsoffset: u64,
 ) {
     let keep_running = Arc::new(AtomicBool::new(true));
     let kr = keep_running.clone();
@@ -359,7 +363,7 @@ fn polling_loop(
                         }
 
                         let root = merkle.compute_root();
-                        let srep = make_srep(&mut ephemeral_key, &root);
+                        let srep = make_srep(&mut ephemeral_key, &root,secondsoffset);
 
                         for (i, &(ref nonce, ref src_addr)) in requests.iter().enumerate() {
                             let paths = merkle.get_paths(i);
@@ -416,7 +420,7 @@ pub fn main() {
         process::exit(1);
     }
 
-    let (addr, key_seed, batch_size) = load_config(&args.nth(1).unwrap());
+    let (addr, key_seed, batch_size, secondsoffset) = load_config(&args.nth(1).unwrap());
     let (mut ephemeral_key, cert_bytes) = make_key_and_cert(&key_seed);
 
     info!("Server listening on {}", addr);
@@ -449,6 +453,7 @@ pub fn main() {
         &cert_bytes,
         batch_size,
         response_counter.clone(),
+        secondsoffset,
     );
 
     info!("Done.");
