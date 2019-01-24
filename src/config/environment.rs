@@ -16,7 +16,7 @@ use std::env;
 use std::time::Duration;
 
 use crate::config::ServerConfig;
-use crate::config::{DEFAULT_BATCH_SIZE, DEFAULT_STATUS_INTERVAL};
+use crate::config::{DEFAULT_BATCH_SIZE, DEFAULT_STATUS_INTERVAL, DEFAULT_SECONDSOFFSET};
 use crate::key::KmsProtection;
 use crate::Error;
 
@@ -30,6 +30,7 @@ use crate::Error;
 ///   interface         | `ROUGHENOUGH_INTERFACE`
 ///   seed              | `ROUGHENOUGH_SEED`
 ///   batch_size        | `ROUGHENOUGH_BATCH_SIZE`
+///   secondsoffset     | `ROUGHENOUGH_SECONDSOFFSET`
 ///   status_interval   | `ROUGHENOUGH_STATUS_INTERVAL`
 ///   kms_protection    | `ROUGHENOUGH_KMS_PROTECTION`
 ///   health_check_port | `ROUGHENOUGH_HEALTH_CHECK_PORT`
@@ -39,6 +40,7 @@ pub struct EnvironmentConfig {
     interface: String,
     seed: Vec<u8>,
     batch_size: u8,
+    secondsoffset: u64,
     status_interval: Duration,
     kms_protection: KmsProtection,
     health_check_port: Option<u16>,
@@ -48,6 +50,7 @@ const ROUGHENOUGH_PORT: &str = "ROUGHENOUGH_PORT";
 const ROUGHENOUGH_INTERFACE: &str = "ROUGHENOUGH_INTERFACE";
 const ROUGHENOUGH_SEED: &str = "ROUGHENOUGH_SEED";
 const ROUGHENOUGH_BATCH_SIZE: &str = "ROUGHENOUGH_BATCH_SIZE";
+const ROUGHENOUGH_SECONDSOFFSET: &str = "ROUGHENOUGH_SECONDSOFFSET";
 const ROUGHENOUGH_STATUS_INTERVAL: &str = "ROUGHENOUGH_STATUS_INTERVAL";
 const ROUGHENOUGH_KMS_PROTECTION: &str = "ROUGHENOUGH_KMS_PROTECTION";
 const ROUGHENOUGH_HEALTH_CHECK_PORT: &str = "ROUGHENOUGH_HEALTH_CHECK_PORT";
@@ -59,6 +62,7 @@ impl EnvironmentConfig {
             interface: "".to_string(),
             seed: Vec::new(),
             batch_size: DEFAULT_BATCH_SIZE,
+            secondsoffset: DEFAULT_SECONDSOFFSET,
             status_interval: DEFAULT_STATUS_INTERVAL,
             kms_protection: KmsProtection::Plaintext,
             health_check_port: None,
@@ -84,6 +88,13 @@ impl EnvironmentConfig {
                 .parse()
                 .unwrap_or_else(|_| panic!("invalid batch_size: {}", batch_size));
         };
+
+        if let Ok(secondsoffset) = env::var(ROUGHENOUGH_SECONDSOFFSET) {
+            cfg.secondsoffset = secondsoffset
+                .parse()
+                .unwrap_or_else(|_| panic!("invalid secondsoffset: {}", secondsoffset));
+        };
+
 
         if let Ok(status_interval) = env::var(ROUGHENOUGH_STATUS_INTERVAL) {
             let val: u16 = status_interval
@@ -126,6 +137,10 @@ impl ServerConfig for EnvironmentConfig {
 
     fn batch_size(&self) -> u8 {
         self.batch_size
+    }
+
+    fn secondsoffset(&self) -> u64 {
+        self.secondsoffset
     }
 
     fn status_interval(&self) -> Duration {

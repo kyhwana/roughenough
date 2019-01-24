@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::config::ServerConfig;
-use crate::config::{DEFAULT_BATCH_SIZE, DEFAULT_STATUS_INTERVAL};
+use crate::config::{DEFAULT_BATCH_SIZE, DEFAULT_STATUS_INTERVAL,DEFAULT_SECONDSOFFSET};
 use crate::key::KmsProtection;
 use std::time::Duration;
 
@@ -27,6 +27,7 @@ pub struct MemoryConfig {
     pub interface: String,
     pub seed: Vec<u8>,
     pub batch_size: u8,
+    pub secondsoffset: u64,
     pub status_interval: Duration,
     pub kms_protection: KmsProtection,
     pub health_check_port: Option<u16>,
@@ -40,6 +41,7 @@ impl MemoryConfig {
             seed: hex::decode("a32049da0ffde0ded92ce10a0230d35fe615ec8461c14986baa63fe3b3bac3db")
                 .unwrap(),
             batch_size: DEFAULT_BATCH_SIZE,
+            secondsoffset: DEFAULT_SECONDSOFFSET,
             status_interval: DEFAULT_STATUS_INTERVAL,
             kms_protection: KmsProtection::Plaintext,
             health_check_port: None,
@@ -63,7 +65,9 @@ impl ServerConfig for MemoryConfig {
     fn batch_size(&self) -> u8 {
         self.batch_size
     }
-
+    fn secondsoffset(&self) -> u64 {
+        self.secondsoffset
+    }
     fn status_interval(&self) -> Duration {
         self.status_interval
     }

@@ -39,6 +39,7 @@ pub struct FileConfig {
     interface: String,
     seed: Vec<u8>,
     batch_size: u8,
+    secondsoffset: u64,
     status_interval: Duration,
     kms_protection: KmsProtection,
     health_check_port: Option<u16>,
@@ -66,6 +67,7 @@ impl FileConfig {
             interface: "".to_string(),
             seed: Vec::new(),
             batch_size: DEFAULT_BATCH_SIZE,
+            secondsoffset: 0,
             status_interval: DEFAULT_STATUS_INTERVAL,
             kms_protection: KmsProtection::Plaintext,
             health_check_port: None,
@@ -76,6 +78,7 @@ impl FileConfig {
                 "port" => config.port = value.as_i64().unwrap() as u16,
                 "interface" => config.interface = value.as_str().unwrap().to_string(),
                 "batch_size" => config.batch_size = value.as_i64().unwrap() as u8,
+                "secondsoffset" => config.secondsoffset = value.as_i64().unwrap() as u64,
                 "seed" => {
                     let val = value.as_str().unwrap().to_string();
                     config.seed = hex::decode(val)
@@ -126,6 +129,9 @@ impl ServerConfig for FileConfig {
         self.batch_size
     }
 
+    fn secondsoffset(&self) -> u64 {
+        self.secondsoffset
+    }
     fn status_interval(&self) -> Duration {
         self.status_interval
     }

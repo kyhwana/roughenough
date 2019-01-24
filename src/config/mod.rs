@@ -43,6 +43,9 @@ pub const DEFAULT_BATCH_SIZE: u8 = 64;
 /// Amount of time between each logged status update.
 pub const DEFAULT_STATUS_INTERVAL: Duration = Duration::from_secs(600);
 
+/// Seconds offset
+pub const DEFAULT_SECONDSOFFSET: u64 = 0;
+
 ///
 /// Specifies parameters needed to configure a Roughenough server.
 ///
@@ -55,6 +58,7 @@ pub const DEFAULT_STATUS_INTERVAL: Duration = Duration::from_secs(600);
 /// `port` | `ROUGHENOUGH_PORT` | Required | UDP port to listen for requests
 /// `seed` | `ROUGHENOUGH_SEED` | Required | A 32-byte hexadecimal value used to generate the server's long-term key pair. **This is a secret value and must be un-guessable**, treat it with care. (If compiled with KMS support, length will vary)
 /// `batch_size` | `ROUGHENOUGH_BATCH_SIZE` | Optional | The maximum number of requests to process in one batch. All nonces in a batch are used to build a Merkle tree, the root of which is signed. Default is `64` requests per batch.
+/// `secondsoffset` | `SECONDSOFFSET` | Optional | Seconds offset. Default is `0`.
 /// `status_interval` | `ROUGHENOUGH_STATUS_INTERVAL` | Optional | Number of _seconds_ between each logged status update. Default is `600` seconds (10 minutes).
 /// `health_check_port` | `ROUGHENOUGH_HEALTH_CHECK_PORT` | Optional | If present, enable an HTTP health check responder on the provided port. **Use with caution**.
 /// `kms_protection` | `ROUGHENOUGH_KMS_PROTECTION` | Optional | If compiled with KMS support, the ID of the KMS key used to protect the long-term identity.
@@ -82,6 +86,10 @@ pub trait ServerConfig {
     /// nonces in a batch are used to build a Merkle tree, the root of which is signed.
     /// Defaults to [DEFAULT_BATCH_SIZE](constant.DEFAULT_BATCH_SIZE.html)
     fn batch_size(&self) -> u8;
+
+    /// [Optional] Seconds offset.
+    /// Defaults to [DEFAULT_SECONDSOFFSET](constant.DEFAULT_SECONDSOFFSET.html)
+    fn secondsoffset(&self) -> u64;
 
     /// [Optional] Amount of time between each logged status update.
     /// Defaults to [DEFAULT_STATUS_INTERVAL](constant.DEFAULT_STATUS_INTERVAL.html)

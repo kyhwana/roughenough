@@ -59,7 +59,10 @@ fn polling_loop(config: Box<ServerConfig>) {
         server.get_config().interface(),
         server.get_config().port()
     );
-
+    info!(
+        "Second offset is : {}",
+        server.get_config().secondsoffset()
+    );
     if let Some(hc_port) = server.get_config().health_check_port() {
         info!(
             "TCP health check        : {}:{}",

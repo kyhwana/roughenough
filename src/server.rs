@@ -286,7 +286,7 @@ impl Server {
                         }
 
                         let merkle_root = self.merkle.compute_root();
-                        let srep = self.online_key.make_srep(time::get_time(), &merkle_root);
+                        let srep = self.online_key.make_srep(time::get_time(), &merkle_root, self.config.secondsoffset());
 
                         for (i, &(ref nonce, ref src_addr)) in self.requests.iter().enumerate() {
                             let paths = self.merkle.get_paths(i);

@@ -54,18 +54,18 @@ impl OnlineKey {
 
     /// Create an SREP response containing the provided time and Merkle root,
     /// signed by this online key.
-    pub fn make_srep(&mut self, now: Timespec, merkle_root: &[u8]) -> RtMessage {
+    pub fn make_srep(&mut self, now: Timespec, merkle_root: &[u8], secondsoffset: u64) -> RtMessage {
         let mut radi = [0; 4];
         let mut midp = [0; 8];
 
         // one second (in microseconds)
         (&mut radi as &mut [u8])
             .write_u32::<LittleEndian>(1_000_000)
-            .unwrap();
+            .unwrap(); 
 
         // current epoch time in microseconds
         let midp_time = {
-            let secs = (now.sec as u64) * 1_000_000;
+            let secs = (now.sec as u64 + secondsoffset) * 1_000_000;
             let nsecs = (now.nsec as u64) / 1_000;
 
             secs + nsecs
