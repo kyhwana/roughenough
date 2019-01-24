@@ -1,4 +1,4 @@
-// Copyright 2017 int08h LLC
+// Copyright 2017-2019 int08h LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,16 @@
 //! Roughtime messages are represented by [`RtMessage`](struct.RtMessage.html) which
 //! implements the mapping of Roughtime `u32` [`tags`](enum.Tag.html) to byte-strings.
 //!
+//! # Keys and Signing
+//!
+//! Roughtime uses an [Ed25519](https://ed25519.cr.yp.to/) key pair as the server's
+//! long-term identity and a second key pair (signed by the long-term key) as a
+//! delegated on-line (ephemeral) key.
+//!
+//! [`LongTermKey`](key/struct.LongTermKey.html) and [`OnlineKey`](key/struct.OnlineKey.html)
+//! implement these elements of the protocol. The [`sign`](sign/index.html) module provides
+//! signing and verification operations.
+//!
 //! # Client
 //!
 //! A Roughtime client can be found in `src/bin/client.rs`. To run the client:
@@ -37,49 +47,47 @@
 //!
 //! # Server
 //!
-//! A Roughtime server implementation is in `src/bin/server.rs`. The server is
-//! configured via a yaml file:
+//! The core Roughtime server implementation is in `src/server.rs` and the server's CLI can
+//! be found in `src/bin/roughenough-server.rs`.
 //!
-//! ```yaml
-//! interface: 127.0.0.1
-//! port: 8686
-//! seed: f61075c988feb9cb700a4a6a3291bfbc9cab11b9c9eca8c802468eb38a43d7d3
-//! batch_size: 64
-//! ```
+//! The server has multiple ways it can be configured,
+//! see [`ServerConfig`](config/trait.ServerConfig.html) for the configuration trait and
 //!
-//! Where:
-//!
-//!   * **interface** - IP address or interface name for listening to client requests
-//!   * **port** - UDP port to listen to requests
-//!   * **seed** - A 32-byte hexadecimal value used as the seed to generate the
-//!                server's long-term key pair. **This is a secret value**, treat it
-//!                with care.
-//!   * **batch_size** - The number of requests to process in one batch. All nonces
-//!                      in a batch are used to build a Merkle tree, the root of which
-//!                      is signed.
-//!
-//! To run the server:
-//!
-//! ```bash
-//! $ cargo run --release --bin server /path/to/config.file
-//! ```
 //!
 
-extern crate byteorder;
+#[macro_use]
+extern crate log;
 
 mod error;
-mod tag;
 mod message;
+mod tag;
 
-pub mod sign;
+pub mod config;
+pub mod key;
+pub mod kms;
 pub mod merkle;
+pub mod server;
+pub mod sign;
 
-pub use error::Error;
-pub use tag::Tag;
-pub use message::RtMessage;
+pub use crate::error::Error;
+pub use crate::message::RtMessage;
+pub use crate::tag::Tag;
 
 /// Version of Roughenough
-pub const VERSION: &str = "1.0.4";
+pub const VERSION: &str = "1.1.1";
+
+/// Roughenough version string enriched with any compile-time optional features
+pub fn roughenough_version() -> String {
+    let kms_str = if cfg!(feature = "awskms") {
+        " (+AWS KMS)"
+    } else if cfg!(feature = "gcpkms") {
+        " (+GCP KMS)"
+    } else {
+        ""
+    };
+
+    format!("{}{}", VERSION, kms_str)
+}
 
 //  Constants and magic numbers of the Roughtime protocol
 

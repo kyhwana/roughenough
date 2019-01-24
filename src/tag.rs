@@ -1,4 +1,4 @@
-// Copyright 2017 int08h LLC
+// Copyright 2017-2019 int08h LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use error::Error;
+use crate::error::Error;
 
 /// An unsigned 32-bit value (key) that maps to a byte-string (value).
-#[derive(Debug, PartialEq, Eq, PartialOrd, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Hash, Clone, Copy)]
 pub enum Tag {
     // Enforcement of the "tags in strictly increasing order" rule is done using the
     // little-endian encoding of the ASCII tag value; e.g. 'SIG\x00' is 0x00474953 and
@@ -40,8 +40,8 @@ pub enum Tag {
 
 impl Tag {
     /// Translates a tag into its on-the-wire representation
-    pub fn wire_value(&self) -> &'static [u8] {
-        match *self {
+    pub fn wire_value(self) -> &'static [u8] {
+        match self {
             Tag::CERT => b"CERT",
             Tag::DELE => b"DELE",
             Tag::INDX => b"INDX",

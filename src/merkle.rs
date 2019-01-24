@@ -1,4 +1,4 @@
-// Copyright 2018 int08h LLC
+// Copyright 2017-2019 int08h LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,8 @@
 //! Merkle Tree implementation using SHA-512 and the Roughtime leaf and node tweak values.
 //!
 
-extern crate ring;
-
+use ring::digest;
 use super::{HASH_LENGTH, TREE_LEAF_TWEAK, TREE_NODE_TWEAK};
-use self::ring::digest;
 
 type Data = Vec<u8>;
 type Hash = Data;
@@ -32,7 +30,6 @@ pub struct MerkleTree {
 }
 
 impl MerkleTree {
-
     ///
     /// Create a new empty Merkle Tree
     ///
@@ -63,7 +60,7 @@ impl MerkleTree {
 
     pub fn compute_root(&mut self) -> Hash {
         assert!(
-            self.levels[0].len() > 0,
+            !self.levels[0].is_empty(),
             "Must have at least one leaf to hash!"
         );
 
@@ -98,7 +95,7 @@ impl MerkleTree {
     }
 
     pub fn reset(&mut self) {
-        for mut level in &mut self.levels {
+        for level in &mut self.levels {
             level.clear();
         }
     }
@@ -153,7 +150,7 @@ pub fn root_from_paths(mut index: usize, data: &[u8], paths: &[u8]) -> Hash {
 
 #[cfg(test)]
 mod test {
-    use merkle::*;
+    use crate::merkle::*;
 
     fn test_paths_with_num(num: usize) {
         let mut merkle = MerkleTree::new();
